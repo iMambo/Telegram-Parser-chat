@@ -1,0 +1,19 @@
+telegram-industrial-parser/
+├── ps.py                 # Основной парсер
+├── dashboard.html        # Веб-панель
+├── config.json           # Конфигурация
+├── groups.txt            # Список групп
+├── invites.txt           # Инвайт-ссылки
+├── parser.db             # База данных SQLite
+├── parser.log            # Лог-файл
+├── status.json           # Статус для веб-панели
+├── sessions/             # Файлы сессий
+│   └── account.session
+├── media/                # Медиафайлы
+│   ├── 123456789/        # ID группы
+│   │   ├── 100_photo.jpg
+│   │   └── 101_video.mp4
+│   └── avatars/
+│       └── 987654321.jpg
+└── users/                # JSON профили
+    └── 987654321.json
