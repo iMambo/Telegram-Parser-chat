@@ -1,0 +1,26 @@
+{
+  "api_id": ,
+  "api_hash": "",
+  "accounts_folder": "sessions",
+  "db_type": "sqlite",
+  "sqlite_path": "parser.db",
+  "postgres_url": "",
+  "web_port": 8081,
+  "captcha_api_key": "",
+  "captcha_service": "2captcha",
+  "proxy_sources": [
+    "сюда апи ссылки фри/платных прокси или просто оставьте прокси тут"
+  ],
+  "batch_size": 100,
+  "media_dir": "media",
+  "users_dir": "users",
+  "log_file": "parser.log",
+  "log_level": "INFO",
+  "max_workers": 10,
+  "flood_sleep_threshold": 30,
+  "request_delay": 0.3,
+  "invite_attempts": 3,
+  "max_participants": 10000,
+  "enable_user_json": true,
+  "graceful_shutdown_timeout": 30
+}
