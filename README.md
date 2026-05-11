@@ -1,3 +1,4 @@
+
 ```markdown
 # Telegram-Parser-chat
 
@@ -5,9 +6,9 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Termux](https://img.shields.io/badge/Termux-Supported-brightgreen)](https://termux.dev)
 
-Telegram Industrial Parser — мощный инструмент для сбора данных из Telegram-групп. Парсер автоматически собирает сообщения, медиафайлы и профили пользователей, сохраняя всё в базу данных SQLite (или PostgreSQL). Встроенная веб-панель позволяет управлять парсером и просматривать собранные данные через браузер.
+Мощный промышленный парсер Telegram-групп с веб-панелью управления. Собирает сообщения, медиафайлы и полные профили пользователей с автоматическим обходом ограничений.
 
-## 📌 Содержание
+## Содержание
 
 1. [Обзор](#обзор)
 2. [Требования](#требования)
@@ -26,7 +27,9 @@ Telegram Industrial Parser — мощный инструмент для сбор
 
 ## Обзор
 
-**Ключевые возможности:**
+Telegram Industrial Parser — мощный инструмент для сбора данных из Telegram-групп. Парсер автоматически собирает сообщения, медиафайлы и профили пользователей, сохраняя всё в базу данных SQLite (или PostgreSQL). Встроенная веб-панель позволяет управлять парсером и просматривать собранные данные через браузер.
+
+### Ключевые возможности
 
 | Возможность | Описание |
 |:------------|:---------|
@@ -46,21 +49,21 @@ Telegram Industrial Parser — мощный инструмент для сбор
 
 | Компонент | Версия/Описание |
 |:----------|:----------------|
-| Python | 3.10+ |
+| Python | 3.10 или выше |
 | ОС | Termux (Android), Linux, Windows |
-| Библиотеки | telethon, aiohttp, sqlalchemy, aiosqlite, Pillow |
+| Библиотеки | telethon, sqlalchemy, aiosqlite, Pillow |
 
 **Установка зависимостей:**
 
 ```bash
-pip install telethon aiohttp sqlalchemy aiosqlite Pillow
+pip install telethon sqlalchemy aiosqlite Pillow
 ```
 
 Клонирование репозитория:
 
 ```bash
-git clone https://github.com/your-username/telegram-industrial-parser.git
-cd telegram-industrial-parser
+git clone https://github.com/your-username/telegram-parser-chat.git
+cd telegram-parser-chat
 ```
 
 Получение API ключей: my.telegram.org
@@ -99,9 +102,6 @@ pip install telethon sqlalchemy aiosqlite Pillow
 # Создаём папку проекта
 mkdir ~/telegram-parser
 cd ~/telegram-parser
-
-# Копируем файлы парсера в эту папку
-# (ps.py и dashboard.html должны быть здесь)
 ```
 
 Linux/Windows
@@ -115,8 +115,6 @@ venv\Scripts\activate     # Windows
 
 # Устанавливаем зависимости
 pip install telethon sqlalchemy aiosqlite Pillow
-
-# Копируем файлы в папку проекта
 ```
 
 ---
@@ -144,9 +142,11 @@ pip install telethon sqlalchemy aiosqlite Pillow
 }
 ```
 
+Параметры конфигурации
+
 Параметр Тип Описание По умолчанию
-api_id int API ID с my.telegram.org 0
-api_hash str API Hash с my.telegram.org ""
+api_id int API ID приложения Telegram 0
+api_hash str API Hash приложения Telegram ""
 accounts_folder str Папка с .session файлами "sessions"
 db_type str sqlite или postgresql "sqlite"
 sqlite_path str Путь к файлу БД "parser.db"
@@ -156,13 +156,19 @@ users_dir str Папка для JSON профилей "users"
 log_file str Файл логов "parser.log"
 max_workers int Количество воркеров 5
 request_delay float Задержка между запросами (сек) 0.3
-max_participants int Максимум участников 10000
+max_participants int Максимум участников для сбора 10000
 enable_user_json bool Сохранять JSON файлы true
 api_port int Порт веб-панели 8081
 
 ---
 
 Подготовка аккаунтов
+
+Способы создания сессий
+
+Способ Описание Сложность
+Веб-панель Загрузить .session через браузер Лёгкая
+Скрипт Создать create_session.py и запустить Средняя
 
 Способ 1: Через веб-панель
 
@@ -191,6 +197,8 @@ async def main():
 asyncio.run(main())
 ```
 
+Запусти:
+
 ```bash
 python create_session.py
 ```
@@ -200,17 +208,18 @@ python create_session.py
 Запуск
 
 ```bash
+# Запуск парсера
 python ps.py
 ```
 
-После запуска парсер:
+Что происходит при запуске
 
 Шаг Действие
-1 Создаст таблицы в базе данных
-2 Подключит все аккаунты из папки sessions/
-3 Загрузит группы из groups.txt и invites.txt
-4 Запустит воркеров для парсинга
-5 Поднимет веб-панель на порту 8081
+1 Создаёт таблицы в базе данных
+2 Подключает все аккаунты из папки sessions/
+3 Загружает группы из groups.txt и invites.txt
+4 Запускает воркеров для парсинга
+5 Поднимает веб-панель на порту 8081
 
 ---
 
@@ -229,7 +238,7 @@ python ps.py
 Сообщений Всего собрано сообщений
 Пользователей Всего сохранено пользователей
 
-Кнопки:
+Кнопки управления
 
 Кнопка Действие
 ⏯️ Пауза Приостановить/возобновить парсинг
@@ -243,58 +252,45 @@ python ps.py
 Функция Описание
 Список пользователей Все собранные пользователи
 Поиск По ID или @username
-Чат Просмотр сообщений пользователя
+Чат Просмотр сообщений конкретного пользователя
 Медиа Открытие файлов по ссылкам
 
 ---
 
 Добавление групп
 
+Способы добавления
+
 Способ Формат Пример
 groups.txt По одной на строку @chat_name
 Веб-панель Поле ввода + кнопка ➕ username или ID
-API POST запрос curl -X POST ...
+API POST запрос curl -X POST .../add_group
 invites.txt Инвайт-ссылки https://t.me/+hash
 
-Валидные форматы:
+Валидные форматы
 
-Формат Пример
-@username @chat_name
-ID группы 1234567890
-Инвайт-ссылка https://t.me/+hash
+Формат Пример Описание
+@username @chat_name Публичная группа/канал
+ID 1234567890 ID группы
+Инвайт-ссылка https://t.me/+hash Закрытая группа
 
 ---
 
 Просмотр данных
 
-База данных SQLite
-
-```bash
-sqlite3 parser.db
-
-# Все пользователи
-SELECT id, username, first_name, last_name FROM users;
-
-# Количество сообщений по группам
-SELECT g.title, COUNT(*) as cnt
-FROM messages m JOIN groups g ON m.group_id = g.id
-GROUP BY m.group_id;
-
-# Последние 10 сообщений
-SELECT * FROM messages ORDER BY date DESC LIMIT 10;
-```
-
 Медиафайлы
 
-Тип Путь Пример
+Тип Путь Пример имени файла
 Фото media/<group_id>/ 12345_photo.jpg
-Видео media/<group_id>/ 12345_video.mp4
-Голосовые media/<group_id>/ 12345_voice.ogg
-Документы media/<group_id>/ 12345_document.pdf
-Стикеры media/<group_id>/ 12345_sticker.webp
-Аватары media/avatars/ <user_id>.jpg
+Видео media/<group_id>/ 12346_video.mp4
+Голосовые media/<group_id>/ 12347_voice.ogg
+Документы media/<group_id>/ 12348_document.pdf
+Стикеры media/<group_id>/ 12349_sticker.webp
+Аватары media/avatars/ 987654321.jpg
 
-JSON-профили
+JSON-профили пользователей
+
+Файлы users/<user_id>.json содержат:
 
 ```json
 {
@@ -304,7 +300,7 @@ JSON-профили
     "last_name": "Петров",
     "phone": "+79001234567",
     "bio": "Описание профиля",
-    "photo_path": "/path/to/photo.jpg"
+    "photo_path": "media/avatars/123456789.jpg"
 }
 ```
 
@@ -313,11 +309,11 @@ JSON-профили
 Решение проблем
 
 Проблема Решение
-Парсер не видит группы Проверь groups.txt в папке с ps.py
+Парсер не видит группы Проверь, что groups.txt лежит в папке с ps.py
 Веб-панель не открывается Проверь сообщение в консоли: Панель: http://localhost:8081
-Не собираются пользователи Парсер собирает из сообщений, если нет прав админа
-Cannot cast InputPeerChannel ID каналов пропускаются автоматически
-FloodWait Парсер сам ждёт. Увеличь request_delay
+Пользователи не собираются Парсер собирает из сообщений, если нет прав админа
+Ошибка Cannot cast InputPeerChannel ID каналов и ботов пропускаются автоматически
+FloodWait Парсер автоматически ждёт. Увеличь request_delay
 Не хватает памяти Уменьши max_workers до 1-2
 
 ---
@@ -349,7 +345,7 @@ id INTEGER ID пользователя
 username TEXT @username
 first_name TEXT Имя
 last_name TEXT Фамилия
-phone TEXT Телефон
+phone TEXT Номер телефона
 bio TEXT Описание "О себе"
 photo_path TEXT Путь к аватару
 
@@ -374,23 +370,27 @@ GET /user_messages Сообщения пользователя user, offset, lim
 POST /add_group Добавить группу group
 POST /pause Пауза/возобновление —
 POST /upload_session Загрузить сессию multipart/form-data
+POST /reload_accounts Перезагрузить аккаунты —
 
-Примеры API
+Примеры API запросов
 
 ```bash
-# Статус
+# Статус парсера
 curl http://localhost:8081/status
 
-# Пользователи с пагинацией
+# Список пользователей с пагинацией
 curl "http://localhost:8081/users?offset=0&limit=100"
 
 # Поиск пользователя
 curl "http://localhost:8081/users?search=ivan"
 
-# Сообщения пользователя
-curl "http://localhost:8081/user_messages?user=123456789&limit=50"
+# Сообщения конкретного пользователя
+curl "http://localhost:8081/user_messages?user=@username&limit=50"
 
-# Поставить на паузу
+# Добавить группу в очередь
+curl -X POST http://localhost:8081/add_group -d "group=@chat_name"
+
+# Поставить парсер на паузу
 curl -X POST http://localhost:8081/pause
 ```
 
