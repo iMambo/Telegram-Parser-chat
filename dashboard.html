@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Пульт парсера</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+         background:#0a0f14;color:#d1d5db;padding:8px;min-height:100vh}
+    .container{max-width:700px;margin:0 auto}
+    .tabs{display:flex;gap:4px;margin-bottom:10px}
+    .tab-btn{flex:1;background:#161b22;border:1px solid #2d333b;border-radius:8px 8px 0 0;
+             padding:12px;text-align:center;font-weight:bold;cursor:pointer;transition:0.2s}
+    .tab-btn.active{background:#1c2733;border-bottom-color:transparent;color:#58a6ff}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .card{background:#141b22;border:1px solid #2d333b;border-radius:12px;padding:10px;margin-bottom:10px}
+    h2{color:#58a6ff;font-size:16px;margin-bottom:6px}
+    h3{color:#8b949e;font-size:14px;margin-bottom:6px}
+    .stat{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #21262d}
+    .stat:last-child{border-bottom:none}
+    .value{font-weight:bold;color:#f0f6fc}
+    .actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
+    button,.btn{background:#238636;border:none;color:white;padding:8px 12px;border-radius:6px;
+                font-size:12px;font-weight:600;cursor:pointer;transition:0.2s}
+    button:hover{background:#2ea043}
+    button.secondary{background:#30363d} button.secondary:hover{background:#484f58}
+    input,select{flex:1;min-width:60px;padding:8px 10px;border-radius:6px;border:1px solid #30363d;
+                 background:#0d1117;color:#c9d1d9;font-size:12px}
+    .log-box{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px;
+             height:130px;overflow-y:auto;font-family:monospace;font-size:11px;
+             white-space:pre-wrap;color:#b1bac4}
+
+    .chat-layout{display:flex;gap:8px;flex-direction:column}
+    @media(min-width:600px){
+      .chat-layout{flex-direction:row}
+      .user-sidebar{width:220px;flex-shrink:0}
+      .chat-area{flex:1}
+    }
+    .user-sidebar{background:#141b22;border:1px solid #2d333b;border-radius:8px;overflow:hidden;
+                  display:flex;flex-direction:column;}
+    .sidebar-header{padding:8px;border-bottom:1px solid #2d333b;display:flex;gap:4px}
+    .sidebar-header input{flex:1;min-width:0}
+    .user-list{flex:1;overflow-y:auto;max-height:50vh; /* на мобильных ограничим высоту */}
+    .user-item{padding:8px 10px;border-bottom:1px solid #21262d;cursor:pointer;transition:0.2s}
+    .user-item:hover{background:#1c2733}
+    .user-item .name{font-weight:600;color:#e6edf3}
+    .user-item .uname{font-size:10px;color:#8b949e}
+    .chat-area{background:#141b22;border:1px solid #2d333b;border-radius:8px;display:none;
+               flex-direction:column;}
+    .chat-area.active{display:flex}
+    .chat-header{padding:8px;border-bottom:1px solid #2d333b;display:flex;align-items:center;gap:8px}
+    .chat-header button{background:transparent;border:1px solid #30363d;padding:4px 10px;font-size:13px}
+    .chat-messages{flex:1;overflow-y:auto;padding:8px;max-height:55vh}
+    .msg-bubble{background:#0d1117;border-radius:10px;padding:6px 10px;margin-bottom:6px;max-width:85%;word-wrap:break-word}
+    .msg-bubble .msg-meta{font-size:9px;color:#8b949e;margin-bottom:2px}
+    .msg-bubble .msg-text{margin:4px 0}
+    .msg-bubble .media-links a{color:#58a6ff;margin-right:6px;text-decoration:underline}
+    .empty-state{display:flex;align-items:center;justify-content:center;height:100px;color:#8b949e}
+    .user-list .empty-state{height:60px;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab-btn active" data-tab="panel">⚙️ Панель управления</div>
+      <div class="tab-btn" data-tab="chats">💬 Чаты</div>
+    </div>
+
+    <div id="panelSection" class="tab-content active">
+      <div class="card">
+        <h2>Статистика</h2>
+        <div class="stat"><span>Статус:</span><span id="pausedLabel" class="status-running">Работает</span></div>
+        <div class="stat"><span>Аккаунтов:</span><span class="value" id="accounts">0</span></div>
+        <div class="stat"><span>Очередь:</span><span class="value" id="queue">0</span></div>
+        <div class="stat"><span>Текущая:</span><span class="value" id="currentGroup">нет</span></div>
+        <div class="stat"><span>Завершено групп:</span><span class="value" id="done">0</span></div>
+        <div class="stat"><span>Сообщений:</span><span class="value" id="msgs">0</span></div>
+        <div class="stat"><span>Пользователей:</span><span class="value" id="users">0</span></div>
+        <div class="actions">
+          <button id="pauseBtn">⏯️ Пауза</button>
+          <button id="refreshBtn" class="secondary">🔄</button>
+        </div>
+        <div class="actions">
+          <input id="groupInput" placeholder="username или ID"><button id="addBtn">➕</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📁 Сессии</h3>
+        <ul id="accountList" style="list-style:none;margin-top:4px">нет аккаунтов</ul>
+        <div class="actions">
+          <input type="file" id="sessionFile" accept=".session"><button id="uploadBtn">⬆️</button>
+          <button id="reloadBtn" class="secondary">🔄</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📋 Логи</h3>
+        <div class="log-box" id="log">загрузка...</div>
+      </div>
+    </div>
+
+    <div id="chatSection" class="tab-content">
+      <div class="card" style="margin-bottom:8px">
+        <div class="actions">
+          <input id="quickSearch" placeholder="ID или @username" style="flex:1"><button id="quickSearchBtn">🔍</button>
+        </div>
+      </div>
+      <div class="chat-layout">
+        <div class="user-sidebar">
+          <div class="sidebar-header">
+            <input id="userSearch" placeholder="Фильтр..."><button id="loadMoreUsers">+</button>
+          </div>
+          <div class="user-list" id="userListContainer">загрузка...</div>
+          <div style="padding:4px;border-top:1px solid #2d333b;">
+            <button id="refreshUserListBtn" style="width:100%">🔄 Обновить список</button>
+          </div>
+        </div>
+        <div class="chat-area" id="chatArea">
+          <div class="chat-header">
+            <button id="closeChatBtn">&larr; Назад</button>
+            <span id="chatUserName" style="font-weight:bold"></span>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+    let currentChatUser = null;
+    let userOffset = 0, hasMoreUsers = true, loadingUsers = false;
+    let usersLoaded = false;
+
+    // Переключение вкладок
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      if (tabName === 'panel') {
+        document.querySelector('[data-tab="panel"]').classList.add('active');
+        document.getElementById('panelSection').classList.add('active');
+      } else {
+        document.querySelector('[data-tab="chats"]').classList.add('active');
+        document.getElementById('chatSection').classList.add('active');
+        if (!usersLoaded) { loadUsers(true); usersLoaded = true; }
+      }
+    }
+
+    document.querySelector('.tab-btn[data-tab="panel"]').addEventListener('click', () => switchTab('panel'));
+    document.querySelector('.tab-btn[data-tab="chats"]').addEventListener('click', () => switchTab('chats'));
+
+    async function updateStatus(){
+      const d = await fetchJSON('/status');
+      if(!d) return;
+      id('accounts').textContent = d.accounts||0;
+      id('queue').textContent = d.queue_size||0;
+      id('currentGroup').textContent = d.current_group||'нет';
+      id('done').textContent = d.groups_done||0;
+      id('msgs').textContent = d.messages_collected||0;
+      id('users').textContent = d.users_collected||0;
+      const paused = d.paused;
+      const lbl = id('pausedLabel');
+      if(paused){ lbl.textContent='На паузе'; lbl.className='status-paused'; id('pauseBtn').textContent='▶️ Продолжить';}
+      else{ lbl.textContent='Работает'; lbl.className='status-running'; id('pauseBtn').textContent='⏯️ Пауза';}
+      const list = id('accountList');
+      const names = d.account_names||[];
+      list.innerHTML = names.length ? names.map(n=>`<li style="padding:2px 0;display:flex;justify-content:space-between"><span>${n}</span><span class="value">ок</span></li>`).join('') : 'нет аккаунтов';
+    }
+
+    async function loadLogs(){
+      try{
+        const r = await fetch('/log'); const t = await r.text();
+        id('log').textContent = t||'Лог пуст';
+        id('log').scrollTop = id('log').scrollHeight;
+      }catch(e){ id('log').textContent='Ошибка';}
+    }
+
+    async function loadUsers(reset=false){
+      if(reset){ userOffset=0; hasMoreUsers=true; id('userListContainer').innerHTML=''; }
+      if(!hasMoreUsers || loadingUsers) return;
+      loadingUsers = true;
+      const search = id('userSearch').value.trim();
+      const data = await fetchJSON(`/users?offset=${userOffset}&limit=100&search=${encodeURIComponent(search)}`);
+      if(!data) { loadingUsers=false; return; }
+      const users = data.users||[];
+      const container = id('userListContainer');
+      if(reset && users.length===0){
+        container.innerHTML = '<div class="empty-state">Пользователей пока нет в базе</div>';
+        hasMoreUsers = false;
+        loadingUsers = false;
+        return;
+      }
+      users.forEach(u=>{
+        const div = document.createElement('div');
+        div.className = 'user-item';
+        div.innerHTML = `<div class="name">${escapeHtml(u.first_name||'')} ${escapeHtml(u.last_name||'')}</div>
+                         <div class="uname">${u.username ? '@'+escapeHtml(u.username) : 'ID: '+u.id}</div>`;
+        div.addEventListener('click', ()=> openChat(u));
+        container.appendChild(div);
+      });
+      userOffset += users.length;
+      hasMoreUsers = data.has_more;
+      loadingUsers = false;
+    }
+
+    async function openChat(user){
+      currentChatUser = user;
+      id('chatUserName').textContent = `${user.first_name||''} ${user.last_name||''} (${user.username ? '@'+user.username : user.id})`;
+      id('chatMessages').innerHTML = '<div class="empty-state">Загрузка сообщений...</div>';
+      id('chatArea').classList.add('active');
+      const data = await fetchJSON(`/user_messages?user=${user.username||user.id}&limit=100`);
+      if(!data || data.error){
+        id('chatMessages').innerHTML = `<div class="empty-state">Ошибка: ${data?.error||'не найдено'}</div>`;
+        return;
+      }
+      renderMessages(data.messages||[]);
+    }
+
+    function renderMessages(messages){
+      const div = id('chatMessages');
+      if(!messages.length){ div.innerHTML='<div class="empty-state">Нет сообщений</div>'; return; }
+      div.innerHTML = messages.map(m=>{
+        let html = `<div class="msg-bubble"><div class="msg-meta">${m.date ? new Date(m.date).toLocaleString() : ''}</div>`;
+        if(m.text) html += `<div class="msg-text">${escapeHtml(m.text)}</div>`;
+        if(m.media_type) html += `<div><small>${m.media_type}</small></div>`;
+        if(m.files && m.files.length){
+          html += '<div class="media-links">';
+          m.files.forEach(f=>{ html += `<a href="${f.url}" target="_blank">${f.type}</a> `; });
+          html += '</div>';
+        }
+        html += '</div>';
+        return html;
+      }).join('');
+      div.scrollTop = div.scrollHeight;
+    }
+
+    function closeChat(){
+      currentChatUser = null;
+      id('chatArea').classList.remove('active');
+      id('chatMessages').innerHTML = '';
+    }
+
+    async function quickSearch(){
+      const val = id('quickSearch').value.trim();
+      if(!val) return;
+      const data = await fetchJSON(`/user_messages?user=${encodeURIComponent(val)}&limit=100`);
+      if(data && data.user){
+        openChat({id:data.user.id, username:data.user.username, first_name:data.user.first_name, last_name:data.user.last_name});
+        renderMessages(data.messages||[]);
+      } else {
+        alert('Пользователь не найден');
+      }
+    }
+
+    id('pauseBtn').addEventListener('click', async ()=>{ await fetch('/pause',{method:'POST'}); updateStatus(); });
+    id('addBtn').addEventListener('click', async ()=>{
+      const g = id('groupInput').value.trim(); if(!g) return;
+      await fetch('/add_group',{method:'POST', body:`group=${encodeURIComponent(g)}`});
+      id('groupInput').value=''; updateStatus();
+    });
+    id('uploadBtn').addEventListener('click', async ()=>{
+      const file = id('sessionFile').files[0];
+      if(!file) return alert('Выберите .session файл');
+      const fd = new FormData(); fd.append('session',file);
+      try{
+        const r = await fetch('/upload_session',{method:'POST',body:fd});
+        const j = await r.json();
+        if(j.status==='ok') alert('Сессия загружена');
+        else alert('Ошибка: '+(j.error||''));
+      }catch(e){ alert('Сеть');}
+      updateStatus();
+    });
+    id('reloadBtn').addEventListener('click', async ()=>{ await fetch('/reload_accounts',{method:'POST'}); updateStatus(); });
+    id('refreshBtn').addEventListener('click', ()=>{ updateStatus(); loadLogs(); });
+    id('closeChatBtn').addEventListener('click', closeChat);
+    id('quickSearchBtn').addEventListener('click', quickSearch);
+    id('loadMoreUsers').addEventListener('click', ()=> loadUsers(false));
+    id('userSearch').addEventListener('input', ()=> { loadUsers(true); });
+    id('refreshUserListBtn').addEventListener('click', ()=> { loadUsers(true); });
+
+    function id(s){ return document.getElementById(s); }
+    async function fetchJSON(url, opts){
+      try{ const r = await fetch(url, opts); return await r.json(); } catch(e){ return null; }
+    }
+    function escapeHtml(text){
+      return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    updateStatus(); loadLogs();
+    setInterval(updateStatus, 5000);
+    setInterval(loadLogs, 8000);
+  </script>
+</body>
+  </html>
