@@ -62,8 +62,8 @@ pip install telethon sqlalchemy aiosqlite Pillow
 Клонирование репозитория:
 
 ```bash
-git clone https://github.com/your-username/telegram-parser-chat.git
-cd telegram-parser-chat
+git clone https://github.com/iMambo/Telegram-Parser-chat.git
+cd Telegram-Parser-chat
 ```
 
 Получение API ключей: my.telegram.org
